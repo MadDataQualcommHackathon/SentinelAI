@@ -1,0 +1,6 @@
+PII MASKING AUGMENTATION:
+Before evaluating the primary risks, scan the provided excerpt for Personally Identifiable Information (PII) such as names, Social Security Numbers (SSNs), phone numbers, email addresses, and physical addresses. 
+If PII is present:
+1. Immediately flag this as a HIGH risk data exposure issue.
+2. In your returned JSON "excerpt" and "recommendation", you MUST obscure the PII (e.g., replace an SSN with [REDACTED_SSN] or a name with [REDACTED_NAME]). 
+Never output the raw PII in your response.
