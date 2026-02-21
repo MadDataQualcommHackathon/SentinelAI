@@ -2,23 +2,13 @@ import asyncio
 import uuid
 import os
 import shutil
-import random
 from datetime import datetime
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, RedirectResponse
 
-# ─────────────────────────────────────────────────────────────
-#   from services.ingestion    import IngestionService
-#   from services.vector_store import VectorStore
-#   from services.llm          import LLMService
-#   from services.prompts      import build_prompt
-#   from services.reporter     import generate_report
-#
-#   ingestion    = IngestionService()
-#   vector_store = VectorStore()
-#   llm          = LLMService()
-# ─────────────────────────────────────────────────────────────
+from services.prompts import build_prompt
+from services.llm import LLMService
 
 # ── MOCK: ingestion ──────────────────────────────────────────
 class MockIngestion:
@@ -36,53 +26,6 @@ class MockVectorStore:
 
     def is_ready(self):
         return False   # flip to True once build_kb.py has been run
-
-# ── MOCK: LLM ────────────────────────────────────────────────
-class MockLLM:
-    SAMPLE_FINDINGS = [
-        {
-            "risk_level": "HIGH",
-            "clause_type": "IP Assignment",
-            "excerpt": "Employee assigns all inventions to company including personal time",
-            "recommendation": "Negotiate carve-out for inventions unrelated to company business."
-        },
-        {
-            "risk_level": "HIGH",
-            "clause_type": "Non-Compete",
-            "excerpt": "Shall not engage in competing enterprise for 3 years across North America",
-            "recommendation": "Limit scope to 6 months and specific geography."
-        },
-        {
-            "risk_level": "MED",
-            "clause_type": "Indemnification",
-            "excerpt": "Party shall indemnify and hold harmless with no cap on liability",
-            "recommendation": "Cap indemnification at total contract value."
-        },
-        {
-            "risk_level": "MED",
-            "clause_type": "Termination",
-            "excerpt": "Company may terminate immediately without cause or prior notice",
-            "recommendation": "Require minimum 30-day written notice period."
-        },
-        {
-            "risk_level": "LOW",
-            "clause_type": "Governing Law",
-            "excerpt": "Agreement governed by laws of Delaware",
-            "recommendation": "Ensure jurisdiction is acceptable to both parties."
-        },
-    ]
-
-    def analyze(self, prompt: str):
-        # Returns a rotating fake finding — replace with real Nexa SDK call
-        return random.choice(self.SAMPLE_FINDINGS)
-
-    def is_loaded(self):
-        return False   # flip to True once Nexa SDK model is loaded
-
-# ── MOCK: prompt builder ─────────────────────────────────────
-def mock_build_prompt(file_type, context, chunk):
-    # Real version lives in services/prompts.py
-    return f"[MOCK PROMPT] file_type={file_type} chunk={chunk[:40]}"
 
 # ── MOCK: report generator ───────────────────────────────────
 def mock_generate_report(findings, filename, score):
@@ -118,11 +61,10 @@ def mock_generate_report(findings, filename, score):
     </body></html>
     """
 
-# ── Wire up mocks ─────────────────────────────────────────────
-ingestion    = MockIngestion()
-vector_store = MockVectorStore()
-llm          = MockLLM()
-build_prompt = mock_build_prompt
+# ── Wire up services ──────────────────────────────────────────
+ingestion       = MockIngestion()
+vector_store    = MockVectorStore()
+llm             = LLMService()
 generate_report = mock_generate_report
 
 # ─────────────────────────────────────────────────────────────
@@ -285,9 +227,9 @@ async def _run_analysis(job_id: str, file_path: str):
             # Simulate processing time so progress bar is visible in UI
             await asyncio.sleep(0.6)
 
-            context = vector_store.retrieve(chunk["text"], n=3)
-            prompt  = build_prompt(chunk["file_type"], context, chunk["text"])
-            result  = llm.analyze(prompt)
+            context  = vector_store.retrieve(chunk["text"], n=3)
+            messages = build_prompt(chunk["file_type"], context, chunk["text"])
+            result   = llm.analyze(messages)
 
             if result.get("risk_level", "NONE") != "NONE":
                 findings.append(result)
