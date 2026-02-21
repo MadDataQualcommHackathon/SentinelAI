@@ -1,0 +1,28 @@
+# Sentinel-Edge Backend Dependencies
+# Python 3.11 compatible
+
+# Web framework
+fastapi==0.111.0
+uvicorn==0.29.0
+python-multipart==0.0.9
+
+# PDF parsing
+pdfplumber==0.11.0
+
+# Vector database (file-based, no server required)
+chromadb==0.5.3
+
+# Embeddings model (all-MiniLM-L6-v2)
+sentence-transformers==3.0.0
+
+# Database ORM
+sqlalchemy==2.0.30
+
+# LLM inference via Snapdragon NPU (primary)
+nexaai
+
+# Optional: Ollama fallback inference
+# ollama
+
+# Optional: PDF generation for demo files
+fpdf2
