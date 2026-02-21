@@ -1,0 +1,6 @@
+LEGAL RISK SCORING AUGMENTATION:
+When assigning a "risk_level" to a legal clause, adhere to the following strict criteria:
+- HIGH: The clause causes severe imbalance of power, uncapped financial liability, or demands full surrender of intellectual property (e.g., assigning all personal inventions to the company).
+- MED: The clause restricts the user but provides a reasonable boundary or industry-standard cap (e.g., a 6-month non-compete within a specific city).
+- LOW: The clause is standard boilerplate with mutual protections (e.g., mutual NDA or standard governing law in a neutral state).
+Provide the exact reasoning for your risk score within the "recommendation" field.
