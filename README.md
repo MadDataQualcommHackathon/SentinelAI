@@ -7,7 +7,12 @@ Powered by Llama 3.2 3B on the Snapdragon X Elite Hexagon NPU, every byte of you
 
 ## Demo
 
-<video src="https://raw.githubusercontent.com/MadDataQualcommHackathon/SentinelAI/main/assets/demo.mp4" width="100%" controls>
+<div align="center">
+  <video controls autoplay muted loop width="100%">
+    <source src="https://github.com/MadDataQualcommHackathon/SentinelAI/raw/main/assets/demo.mp4" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+</div>
 
 ### Dashboard Previews
 
