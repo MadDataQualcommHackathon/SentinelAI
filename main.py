@@ -7,6 +7,7 @@ from datetime import datetime
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
 
 # ─────────────────────────────────────────────────────────────
 from backend.services.ingestion    import IngestionService
@@ -132,10 +133,12 @@ app = FastAPI(title="Sentinel-Edge", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],
+    allow_origins=["http://localhost:8000", "http://localhost:5173", "http://localhost:3000"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.mount("/ui", StaticFiles(directory="frontend", html=True), name="frontend")
 
 jobs:    dict[str, dict] = {}
 history: list[dict]      = []
@@ -146,7 +149,7 @@ history: list[dict]      = []
 # ─────────────────────────────────────────────────────────────
 @app.get("/")
 def root():
-    return RedirectResponse(url="/docs")
+    return RedirectResponse(url="/ui")
 def health():
     return {
         "status":       "ok",

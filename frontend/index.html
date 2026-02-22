@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sentinel-Edge — Air-Gapped Security Auditor</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0f172a;
+      --surface:   #1e293b;
+      --border:    #334155;
+      --text:      #e2e8f0;
+      --muted:     #94a3b8;
+      --accent:    #60a5fa;
+      --high:      #ef4444;
+      --med:       #f59e0b;
+      --low:       #22c55e;
+    }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 32px 16px;
+    }
+
+    header {
+      max-width: 900px;
+      margin: 0 auto 32px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .logo {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: -0.5px;
+    }
+
+    .badge {
+      font-size: 11px;
+      background: #1e3a5f;
+      color: var(--accent);
+      border: 1px solid #2d5a8e;
+      border-radius: 20px;
+      padding: 3px 10px;
+    }
+
+    main { max-width: 900px; margin: 0 auto; }
+
+    /* ── Upload card ── */
+    .upload-card {
+      background: var(--surface);
+      border: 2px dashed var(--border);
+      border-radius: 12px;
+      padding: 40px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s;
+      position: relative;
+    }
+    .upload-card.drag-over { border-color: var(--accent); }
+    .upload-card h2 { font-size: 18px; margin-bottom: 8px; }
+    .upload-card p  { color: var(--muted); font-size: 14px; }
+    #file-input { display: none; }
+
+    .btn {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 10px 24px;
+      background: var(--accent);
+      color: #0f172a;
+      font-weight: 600;
+      font-size: 14px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .btn:hover { opacity: 0.85; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ── Progress ── */
+    #progress-section { display: none; margin-top: 24px; }
+    .progress-bar-wrap {
+      background: var(--surface);
+      border-radius: 8px;
+      height: 12px;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+    .progress-bar {
+      height: 100%;
+      background: var(--accent);
+      width: 0%;
+      transition: width 0.4s ease;
+      border-radius: 8px;
+    }
+    .status-text { color: var(--muted); font-size: 13px; margin-top: 6px; }
+
+    /* ── Summary ── */
+    #results-section { display: none; margin-top: 32px; }
+    .summary-row {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .summary-card {
+      flex: 1;
+      background: var(--surface);
+      border-radius: 10px;
+      padding: 20px;
+      text-align: center;
+    }
+    .summary-card .count { font-size: 40px; font-weight: 700; }
+    .summary-card .label { font-size: 12px; color: var(--muted); margin-top: 4px; }
+    .high-count  { color: var(--high); }
+    .med-count   { color: var(--med); }
+    .low-count   { color: var(--low); }
+    .score-count { color: var(--accent); }
+
+    /* ── Finding cards ── */
+    .findings-header {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+
+    .finding-card {
+      background: var(--surface);
+      border-radius: 10px;
+      padding: 18px 20px;
+      margin-bottom: 12px;
+      border-left: 4px solid var(--border);
+    }
+    .finding-card.HIGH { border-left-color: var(--high); }
+    .finding-card.MED  { border-left-color: var(--med); }
+    .finding-card.LOW  { border-left-color: var(--low); }
+
+    .finding-top {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .risk-badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+    .risk-badge.HIGH { background: #7f1d1d; color: var(--high); }
+    .risk-badge.MED  { background: #78350f; color: var(--med); }
+    .risk-badge.LOW  { background: #14532d; color: var(--low); }
+
+    .clause-type { font-weight: 600; font-size: 15px; }
+
+    .excerpt {
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      background: #0f172a;
+      padding: 8px 12px;
+      border-radius: 6px;
+      color: #cbd5e1;
+      margin-bottom: 10px;
+      word-break: break-word;
+    }
+
+    .recommendation {
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .recommendation strong { color: var(--text); }
+
+    /* ── History ── */
+    #history-section { margin-top: 40px; }
+    .section-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 12px;
+    }
+    .history-row {
+      display: flex;
+      align-items: center;
+      background: var(--surface);
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 8px;
+      gap: 12px;
+      font-size: 13px;
+    }
+    .history-filename { flex: 1; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .history-score { font-weight: 700; color: var(--accent); min-width: 60px; text-align: right; }
+    .history-meta  { color: var(--muted); min-width: 140px; text-align: right; }
+    .history-view  {
+      background: var(--border);
+      border: none;
+      color: var(--text);
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .history-view:hover { background: var(--accent); color: #0f172a; }
+
+    /* ── Error ── */
+    .error-box {
+      background: #7f1d1d;
+      color: #fca5a5;
+      padding: 14px 18px;
+      border-radius: 8px;
+      margin-top: 16px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Sentinel-Edge</div>
+  <span class="badge">100% On-Device · Snapdragon X Elite NPU</span>
+</header>
+
+<main>
+  <!-- Upload -->
+  <div class="upload-card" id="drop-zone">
+    <h2>Drop a file to analyze</h2>
+    <p>PDF contracts or source code (.py .js .ts .java .go .sol .txt)</p>
+    <input type="file" id="file-input"
+           accept=".pdf,.py,.js,.ts,.java,.go,.sol,.txt" />
+    <br />
+    <button class="btn" id="choose-btn" onclick="document.getElementById('file-input').click()">
+      Choose File
+    </button>
+    <p id="selected-name" style="margin-top:12px;color:var(--accent);font-size:13px;"></p>
+    <button class="btn" id="analyze-btn" style="display:none;background:#22c55e;" onclick="startAnalysis()">
+      Run Analysis
+    </button>
+  </div>
+
+  <!-- Progress -->
+  <div id="progress-section">
+    <div style="display:flex;justify-content:space-between;font-size:13px;">
+      <span id="progress-label">Analyzing…</span>
+      <span id="progress-pct">0%</span>
+    </div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar" id="progress-bar"></div>
+    </div>
+    <div class="status-text" id="status-text">Starting…</div>
+  </div>
+
+  <!-- Error -->
+  <div class="error-box" id="error-box" style="display:none;"></div>
+
+  <!-- Results -->
+  <div id="results-section">
+    <div class="summary-row">
+      <div class="summary-card">
+        <div class="count score-count" id="s-score">—</div>
+        <div class="label">Risk Score</div>
+      </div>
+      <div class="summary-card">
+        <div class="count high-count" id="s-high">—</div>
+        <div class="label">HIGH</div>
+      </div>
+      <div class="summary-card">
+        <div class="count med-count" id="s-med">—</div>
+        <div class="label">MED</div>
+      </div>
+      <div class="summary-card">
+        <div class="count low-count" id="s-low">—</div>
+        <div class="label">LOW</div>
+      </div>
+    </div>
+
+    <div class="findings-header">Findings</div>
+    <div id="findings-list"></div>
+
+    <button class="btn" style="margin-top:16px;background:var(--border);color:var(--text);"
+            onclick="resetUI()">Analyze Another File</button>
+  </div>
+
+  <!-- History -->
+  <div id="history-section">
+    <div class="section-title">Recent Scans</div>
+    <div id="history-list"><p style="color:var(--muted);font-size:13px;">No scans yet.</p></div>
+  </div>
+</main>
+
+<script>
+  const API = 'http://localhost:8000';
+  let pollTimer = null;
+  let selectedFile = null;
+
+  // ── File selection ──
+  document.getElementById('file-input').addEventListener('change', e => {
+    const f = e.target.files[0];
+    if (!f) return;
+    selectedFile = f;
+    document.getElementById('selected-name').textContent = f.name;
+    document.getElementById('analyze-btn').style.display = 'inline-block';
+  });
+
+  // ── Drag-and-drop ──
+  const dropZone = document.getElementById('drop-zone');
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    const f = e.dataTransfer.files[0];
+    if (!f) return;
+    selectedFile = f;
+    document.getElementById('selected-name').textContent = f.name;
+    document.getElementById('analyze-btn').style.display = 'inline-block';
+  });
+
+  // ── Start analysis ──
+  async function startAnalysis() {
+    if (!selectedFile) return;
+    showError('');
+    document.getElementById('results-section').style.display = 'none';
+    document.getElementById('progress-section').style.display = 'block';
+    setProgress(0, 'Uploading…');
+
+    const form = new FormData();
+    form.append('file', selectedFile);
+
+    try {
+      const res = await fetch(`${API}/api/analyze`, { method: 'POST', body: form });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.detail || res.statusText);
+      }
+      const data = await res.json();
+      pollStatus(data.job_id);
+    } catch (err) {
+      showError('Upload failed: ' + err.message);
+      document.getElementById('progress-section').style.display = 'none';
+    }
+  }
+
+  // ── Poll status ──
+  function pollStatus(jobId) {
+    clearInterval(pollTimer);
+    pollTimer = setInterval(async () => {
+      try {
+        const res = await fetch(`${API}/api/status/${jobId}`);
+        if (!res.ok) throw new Error('Status check failed');
+        const data = await res.json();
+
+        setProgress(data.progress || 0, data.status === 'processing' ? 'Analyzing chunks…' : data.status);
+
+        if (data.status === 'complete') {
+          clearInterval(pollTimer);
+          await loadReport(jobId);
+          loadHistory();
+        } else if (data.status === 'error') {
+          clearInterval(pollTimer);
+          showError('Analysis error: ' + (data.error || 'Unknown error'));
+          document.getElementById('progress-section').style.display = 'none';
+        }
+      } catch (err) {
+        clearInterval(pollTimer);
+        showError('Polling error: ' + err.message);
+      }
+    }, 800);
+  }
+
+  // ── Load report ──
+  async function loadReport(jobId) {
+    const res = await fetch(`${API}/api/report/${jobId}`);
+    const data = await res.json();
+
+    document.getElementById('s-score').textContent = data.score;
+    document.getElementById('s-high').textContent  = data.summary.high;
+    document.getElementById('s-med').textContent   = data.summary.med;
+    document.getElementById('s-low').textContent   = data.summary.low;
+
+    const list = document.getElementById('findings-list');
+    list.innerHTML = '';
+    if (data.findings.length === 0) {
+      list.innerHTML = '<p style="color:var(--low);padding:16px 0">No significant risks found.</p>';
+    } else {
+      data.findings.forEach(f => {
+        const level = f.risk_level || 'LOW';
+        const type  = f.clause_type || f.vulnerability_type || 'Finding';
+        const card  = document.createElement('div');
+        card.className = `finding-card ${level}`;
+        card.innerHTML = `
+          <div class="finding-top">
+            <span class="risk-badge ${level}">${level}</span>
+            <span class="clause-type">${escHtml(type)}</span>
+          </div>
+          ${f.excerpt ? `<div class="excerpt">${escHtml(f.excerpt)}</div>` : ''}
+          ${f.recommendation ? `<div class="recommendation"><strong>Recommendation:</strong> ${escHtml(f.recommendation)}</div>` : ''}
+        `;
+        list.appendChild(card);
+      });
+    }
+
+    document.getElementById('progress-section').style.display = 'none';
+    document.getElementById('results-section').style.display  = 'block';
+  }
+
+  // ── Load history ──
+  async function loadHistory() {
+    try {
+      const res = await fetch(`${API}/api/history`);
+      const data = await res.json();
+      const el = document.getElementById('history-list');
+      if (!data.length) {
+        el.innerHTML = '<p style="color:var(--muted);font-size:13px;">No scans yet.</p>';
+        return;
+      }
+      el.innerHTML = data.map(j => `
+        <div class="history-row">
+          <span class="history-filename" title="${escHtml(j.filename)}">${escHtml(j.filename)}</span>
+          <span style="color:var(--muted);font-size:12px;">${j.finding_count} finding${j.finding_count !== 1 ? 's' : ''}</span>
+          <span class="history-score">Score: ${j.score}</span>
+          <span class="history-meta">${new Date(j.created_at).toLocaleString()}</span>
+          <button class="history-view" onclick="loadReport('${escHtml(j.job_id)}')">View</button>
+        </div>
+      `).join('');
+    } catch (_) {}
+  }
+
+  // ── Helpers ──
+  function setProgress(pct, label) {
+    document.getElementById('progress-bar').style.width = pct + '%';
+    document.getElementById('progress-pct').textContent = pct + '%';
+    document.getElementById('status-text').textContent  = label;
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('error-box');
+    el.textContent = msg;
+    el.style.display = msg ? 'block' : 'none';
+  }
+
+  function resetUI() {
+    selectedFile = null;
+    document.getElementById('file-input').value = '';
+    document.getElementById('selected-name').textContent = '';
+    document.getElementById('analyze-btn').style.display = 'none';
+    document.getElementById('results-section').style.display = 'none';
+    document.getElementById('progress-section').style.display = 'none';
+    showError('');
+  }
+
+  function escHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  // ── Init ──
+  loadHistory();
+</script>
+</body>
+</html>
