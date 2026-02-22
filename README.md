@@ -6,7 +6,7 @@ Sentinel-Edge AI is an air-gapped AI security auditor that runs 100% on-device. 
 Powered by Llama 3.2 3B on the Snapdragon X Elite Hexagon NPU, every byte of your sensitive data stays on the machine.
 
 <div align="center">
-  <video src="./assets/Sentinel-Edge_AI-demo.mp4" width="100%" controls>
+  <video src="./assets/demo.mp4" width="100%" controls>
     Your browser does not support the video tag.
   </video>
 </div>
