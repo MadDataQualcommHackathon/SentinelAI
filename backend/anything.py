@@ -21,7 +21,7 @@ def call_llm(message: str) -> str:
         "Content-Type": "application/json",
         "Accept": "application/json",
     }
-    payload = {"message": message, "mode": "query"}
+    payload = {"message": message, "mode": "chat"}
 
     response = requests.post(url, headers=headers, json=payload)
     response.raise_for_status()

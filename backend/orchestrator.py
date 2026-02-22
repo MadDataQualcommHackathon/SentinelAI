@@ -13,7 +13,7 @@ PROMPT_MAP = {
     "pii_masking": "pii_masking.txt",
 }
 
-chroma = ChromaQueryService()
+chroma = ChromaQueryService(r"C:\Users\hackathon user\Documents\SentinelAI\cuad_chroma_db")
 
 
 def load_prompt(selection: str) -> str:
@@ -70,7 +70,7 @@ def run_analysis(pdf_path: str, selection: str) -> dict:
         Aggregated dict matching the schema for the given selection.
     """
     prompt_text = load_prompt(selection)
-    chunks = process_pdf_to_queries(pdf_path)
+    chunks = process_pdf_to_queries(pdf_path)[2:4]
     results = []
 
     for chunk in chunks:
