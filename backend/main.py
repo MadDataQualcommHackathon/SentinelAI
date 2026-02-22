@@ -1,9 +1,8 @@
 import os
 import shutil
 import uuid
-import json
 
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from orchestrator import run_analysis
@@ -12,10 +11,12 @@ app = FastAPI(title="Sentinel-Edge", version="2.0.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],
+    allow_origins=["http://localhost:5173", "http://localhost:3000", "http://localhost:3001"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+VALID_SELECTIONS = {"legal_risk_scoring", "pii_masking", "vulnerability_detection"}
 
 
 def _save_upload(file: UploadFile) -> str:
@@ -31,62 +32,31 @@ def health():
     return {"status": "ok"}
 
 
-@app.post("/api/analyze/vulnerability-detection")
-async def vulnerability_detection(file: UploadFile = File(...)):
+@app.post("/api/analyze")
+async def analyze(
+    file: UploadFile = File(...),
+    selection: str = Form(...),
+    prompt: str = Form(""),
+):
     if not file.filename.lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Only PDF files are supported")
 
+    if selection not in VALID_SELECTIONS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid selection '{selection}'. Valid options: {sorted(VALID_SELECTIONS)}",
+        )
+
     path = _save_upload(file)
     try:
-        raw = run_analysis(path, "vulnerability_detection")
-        data = json.loads(raw)
+        data = run_analysis(path, selection, user_prompt=prompt)
         return {
             "filename": file.filename,
+            "selection": selection,
             "findings": data.get("findings", []),
-        }
-    except json.JSONDecodeError:
-        raise HTTPException(status_code=500, detail=f"LLM returned non-JSON: {raw}")
-    finally:
-        if os.path.exists(path):
-            os.remove(path)
-
-
-@app.post("/api/analyze/legal-risk-scoring")
-async def legal_risk_scoring(file: UploadFile = File(...)):
-    if not file.filename.lower().endswith(".pdf"):
-        raise HTTPException(status_code=400, detail="Only PDF files are supported")
-
-    path = _save_upload(file)
-    try:
-        raw = run_analysis(path, "legal_risk_scoring")
-        data = json.loads(raw)
-        return {
-            "filename": file.filename,
             "score": data.get("score", 0),
-            "findings": data.get("findings", []),
-        }
-    except json.JSONDecodeError:
-        raise HTTPException(status_code=500, detail=f"LLM returned non-JSON: {raw}")
-    finally:
-        if os.path.exists(path):
-            os.remove(path)
-
-
-@app.post("/api/analyze/pii-masking")
-async def pii_masking(file: UploadFile = File(...)):
-    if not file.filename.lower().endswith(".pdf"):
-        raise HTTPException(status_code=400, detail="Only PDF files are supported")
-
-    path = _save_upload(file)
-    try:
-        raw = run_analysis(path, "pii_masking")
-        data = json.loads(raw)
-        return {
-            "filename": file.filename,
             "pii_instances": data.get("pii_instances", []),
         }
-    except json.JSONDecodeError:
-        raise HTTPException(status_code=500, detail=f"LLM returned non-JSON: {raw}")
     finally:
         if os.path.exists(path):
             os.remove(path)
