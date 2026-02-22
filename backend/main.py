@@ -18,10 +18,13 @@ app.add_middleware(
 
 VALID_SELECTIONS = {"legal_risk_scoring", "pii_masking", "vulnerability_detection"}
 
+UPLOAD_DIR = r"C:\Users\hackathon user\Documents\SentinelAI\uploads"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
 
 def _save_upload(file: UploadFile) -> str:
     ext = os.path.splitext(file.filename)[1].lower()
-    path = f"/tmp/sentinel_{uuid.uuid4()}{ext}"
+    path = os.path.join(UPLOAD_DIR, f"sentinel_{uuid.uuid4()}{ext}")
     with open(path, "wb") as f:
         shutil.copyfileobj(file.file, f)
     return path
