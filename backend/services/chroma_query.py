@@ -9,7 +9,6 @@ class ChromaQueryService:
         # self.embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
         self.embeddings = HuggingFaceEmbeddings(model_name="./offline_embedding_model")
         
-        # Connect to your existing local database
         if os.path.exists(self.persist_directory):
             self.db = Chroma(
                 persist_directory=self.persist_directory,
@@ -17,7 +16,7 @@ class ChromaQueryService:
             )
         else:
             self.db = None
-            print(f"❌ Error: ChromaDB not found at {self.persist_directory}")
+            print(f"Error: ChromaDB not found at {self.persist_directory}")
 
     def get_top_3_matches(self, query_text: str) -> list[str]:
         """
@@ -26,27 +25,22 @@ class ChromaQueryService:
         """
         if not self.db:
             return ["Error: Database not loaded."]
-            
-        # Perform the vector search (k=3 means top 3 matches)
+
         results = self.db.similarity_search(query_text, k=3)
         
-        # Format the output into a simple array of 3 strings
         matched_strings = []
         for res in results:
-            # We pull the category metadata you saved during ingestion!
             category = res.metadata.get("category", "General")
             content = res.page_content.strip()
             
-            # Combine them into one clean string
             formatted_match = f"[Reference Category: {category}]\n{content}"
             matched_strings.append(formatted_match)
             
         return matched_strings
 
-# # --- Quick Test ---
 # if __name__ == "__main__":
 #     # You can run this file directly to test the database connection
-#     query_service = ChromaQueryService(r"C:\Users\hackathon user\Documents\SentinelAI\cuad_chroma_db") # Adjust path if needed
+#     query_service = ChromaQueryService(r"C:\Users\hackathon user\Documents\SentinelAI\cuad_chroma_db")
     
 #     test_query = "The employee shall not engage in any competing business for a period of 12 months."
 #     matches = query_service.get_top_3_matches(test_query)

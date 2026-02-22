@@ -29,8 +29,7 @@ def call_llm(message: str) -> str:
 
 
 if __name__ == "__main__":
-    # Quick test when run directly
-    result = call_llm("Hey Llama, are you ready for the hackathon?")
+    result = call_llm("Hey Llama, how are you?")
     print("\n--- AI Response ---")
     print(result)
     print("-------------------")

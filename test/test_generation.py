@@ -1,6 +1,6 @@
-from backend.services.pdf_processor import process_pdf_to_queries
-from backend.services.chroma_query import ChromaQueryService
-from backend.orchestrator import run_analysis
+from ..backend.services.pdf_processor import process_pdf_to_queries
+from ..backend.services.chroma_query import ChromaQueryService
+from ..backend.orchestrator import run_analysis
 
 DB_PATH = r"C:\Users\hackathon user\Documents\SentinelAI\cuad_chroma_db"
 PDF_PATH = r"c:\Users\hackathon user\Documents\LinkPlusCorp_20050802_8-K_EX-10_3240252_EX-10_Affiliate Agreement.pdf"

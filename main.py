@@ -8,7 +8,7 @@ from fastapi.responses import RedirectResponse
 
 from backend.orchestrator import run_analysis, FIXED_PDF_PATH
 
-app = FastAPI(title="Sentinel-Edge", version="3.0.0")
+app = FastAPI(title="Sentinel-Edge AI", version="3.0.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -23,7 +23,6 @@ class AnalysisMode(str, Enum):
     vulnerability_detection = "vulnerability_detection"
 
 
-# --- RESTORED REDIRECT ---
 @app.get("/")
 def root():
     """Redirects the base URL straight to the Swagger UI"""

@@ -10,13 +10,12 @@ import plotly.graph_objects as go
 # PAGE CONFIGURATION & CUSTOM CSS
 # ==========================================
 st.set_page_config(
-    page_title="Sentinel-Edge | Snapdragon NPU",
+    page_title="Sentinel-Edge AI | Snapdragon NPU",
     page_icon="🛡️",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for Cyber-Corporate / Hardware Theme
 st.markdown("""
 <style>
     /* Global Theme tweaks */
@@ -178,7 +177,6 @@ def fetch_api_data(files, data, result_queue):
 # UI: SIDEBAR
 # ==========================================
 with st.sidebar:
-    # High-impact hardware badge instead of a broken image link
     st.markdown("""
     <div class="snapdragon-badge">
         SNAPDRAGON® X ELITE<br>
@@ -201,7 +199,7 @@ with st.sidebar:
 # ==========================================
 # UI: MAIN DASHBOARD
 # ==========================================
-st.title("🛡️ Sentinel-Edge Command Center")
+st.title("🛡️ Sentinel-Edge AI Command Center")
 
 # Telemetry Bar
 st.markdown("""
