@@ -1,9 +1,9 @@
 import os
 
-from services.pdf_processor import process_pdf_to_queries
-from services.chroma_query import ChromaQueryService
-from anything import call_llm
-from response_validator import call_with_retry
+from .services.pdf_processor import process_pdf_to_queries
+from .services.chroma_query import ChromaQueryService
+from .anything import call_llm
+from .response_validator import call_with_retry
 
 PROMPTS_DIR = os.path.join(os.path.dirname(__file__), "..", "prompt")
 
