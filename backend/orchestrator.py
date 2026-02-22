@@ -54,7 +54,7 @@ def _aggregate(results: list[dict], selection: str) -> dict:
     return {}
 
 
-def run_analysis(pdf_path: str, selection: str) -> dict:
+def run_analysis(pdf_path: str, selection: str, user_prompt: str = "") -> dict:
     """
     Full pipeline:
       1. Split PDF into chunks via pdf_processor.
@@ -63,8 +63,9 @@ def run_analysis(pdf_path: str, selection: str) -> dict:
       4. Aggregate all per-chunk results into a single response dict.
 
     Args:
-        pdf_path:  Path to the PDF file to analyse.
-        selection: One of 'vulnerability_detection', 'legal_risk_scoring', 'pii_masking'.
+        pdf_path:    Path to the PDF file to analyse.
+        selection:   One of 'vulnerability_detection', 'legal_risk_scoring', 'pii_masking'.
+        user_prompt: Optional free-text question/context from the user.
 
     Returns:
         Aggregated dict matching the schema for the given selection.
@@ -82,6 +83,8 @@ def run_analysis(pdf_path: str, selection: str) -> dict:
             f"--- Relevant Context ---\n{chroma_context}\n\n"
             f"--- Document Chunk ---\n{chunk}"
         )
+        if user_prompt:
+            message += f"\n\n--- User Question ---\n{user_prompt}"
 
         result = call_with_retry(call_llm, message, selection)
         results.append(result)
