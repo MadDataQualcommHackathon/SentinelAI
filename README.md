@@ -15,13 +15,13 @@ Powered by Llama 3.2 3B on the Snapdragon X Elite Hexagon NPU, every byte of you
 
 [//]: # (Drop your screenshot images into the repo and link them here)
 ![Legal Risk Dashboard](./assets/FE2.png) 
-*Caption: Sentinel-Edge AI evaluating an Affiliate Agreement for Legal Risks.*
+*Sentinel-Edge AI evaluating an Affiliate Agreement for Legal Risks.*
 
 ![Legal Risk Dashboard](./assets/FE1.png) 
-*Caption: Sentinel-Edge AI : Legal Risk Scoring.*
+*Sentinel-Edge AI : Legal Risk Scoring.*
 
 ![Legal Risk Dashboard](./assets/FE3.png) 
-*Caption: Sentinel-Edge AI : Vulnerability Detection.*
+*Sentinel-Edge AI : Vulnerability Detection.*
 
 ## Tech Stack
 
