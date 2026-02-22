@@ -1,0 +1,61 @@
+import os
+
+from services.pdf_parser import extract_text_corpus
+from services.chroma_query import chroma_query
+from anything import call_llm
+
+PROMPTS_DIR = os.path.join(os.path.dirname(__file__), "..", "prompt")
+
+PROMPT_MAP = {
+    "vulnerability_detection": "vulnerability_detection.txt",
+    "legal_risk_scoring": "legal_risk_scoring.txt",
+    "pii_masking": "pii_masking.txt",
+}
+
+
+def load_prompt(selection: str) -> str:
+    """Load the prompt text for the given user selection."""
+    filename = PROMPT_MAP.get(selection)
+    if filename is None:
+        raise ValueError(
+            f"Unknown selection '{selection}'. "
+            f"Valid options: {list(PROMPT_MAP.keys())}"
+        )
+    prompt_path = os.path.join(PROMPTS_DIR, filename)
+    with open(prompt_path, "r") as f:
+        return f.read().strip()
+
+
+def run_analysis(pdf_path: str, selection: str) -> str:
+    """
+    Full pipeline:
+      1. Extract text corpus from PDF.
+      2. Query ChromaDB for relevant context chunks.
+      3. Load the prompt for the user's selection.
+      4. Send all three to AnythingLLM and return the response.
+
+    Args:
+        pdf_path:  Path to the PDF file to analyse.
+        selection: One of 'vulnerability_detection', 'legal_risk_scoring', 'pii_masking'.
+
+    Returns:
+        The LLM's text response as a string.
+    """
+    # 1. PDF → text corpus
+    pdf_text = extract_text_corpus(pdf_path)
+
+    # 2. ChromaDB context
+    chroma_chunks = chroma_query(pdf_text)
+    chroma_context = "\n\n".join(chroma_chunks)
+
+    # 3. Task-specific prompt
+    prompt_text = load_prompt(selection)
+
+    # 4. Assemble message for the LLM
+    message = (
+        f"{prompt_text}\n\n"
+        f"--- Relevant Context ---\n{chroma_context}\n\n"
+        f"--- Document Text ---\n{pdf_text}"
+    )
+
+    return call_llm(message)
