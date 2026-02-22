@@ -1,3 +1,8 @@
 # Ignore all markdown files except README.md
 *.md
 !README.md
+CUAD_v1/full_contract_pdf/*
+cuad_chroma_db/*
+**/__pycache__/
+*.py[cod]
+*$py.class
