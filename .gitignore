@@ -7,3 +7,4 @@ cuad_chroma_db/*
 *.py[cod]
 *$py.class
 offline_embedding_model/*
+env/*
