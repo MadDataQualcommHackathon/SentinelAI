@@ -5,6 +5,9 @@ from .services.chroma_query import ChromaQueryService
 from .anything import call_llm
 from .response_validator import call_with_retry
 
+# --- 1. Hardcoded Fixed PDF Path ---
+FIXED_PDF_PATH = os.path.join(os.path.dirname(__file__), "temp_uploaded_contract.pdf")
+
 PROMPTS_DIR = os.path.join(os.path.dirname(__file__), "..", "prompt")
 
 PROMPT_MAP = {
@@ -16,36 +19,38 @@ PROMPT_MAP = {
 chroma = ChromaQueryService(r"C:\Users\hackathon user\Documents\SentinelAI\cuad_chroma_db")
 
 
-def load_prompt(selection: str) -> str:
-    filename = PROMPT_MAP.get(selection)
+def load_prompt(analysis_mode: str) -> str:
+    filename = PROMPT_MAP.get(analysis_mode)
     if filename is None:
         raise ValueError(
-            f"Unknown selection '{selection}'. "
+            f"Unknown analysis mode '{analysis_mode}'. "
             f"Valid options: {list(PROMPT_MAP.keys())}"
         )
     with open(os.path.join(PROMPTS_DIR, filename), "r") as f:
         return f.read().strip()
 
 
-def _aggregate(results: list[dict], selection: str) -> dict:
+def _aggregate(results: list[dict], analysis_mode: str) -> dict:
     """Merge per-chunk LLM results into a single response dict."""
-    if selection == "vulnerability_detection":
+    if analysis_mode == "vulnerability_detection":
         findings = []
         for r in results:
             findings.extend(r.get("findings", []))
         return {"findings": findings}
 
-    elif selection == "legal_risk_scoring":
+    elif analysis_mode == "legal_risk_scoring":
         findings = []
         scores = []
         for r in results:
             findings.extend(r.get("findings", []))
             if isinstance(r.get("score"), (int, float)):
                 scores.append(r["score"])
+            elif isinstance(r.get("score"), str) and r.get("score").isdigit():
+                scores.append(int(r["score"]))
         score = round(sum(scores) / len(scores)) if scores else 0
         return {"score": score, "findings": findings}
 
-    elif selection == "pii_masking":
+    elif analysis_mode == "pii_masking":
         instances = []
         for r in results:
             instances.extend(r.get("pii_instances", []))
@@ -54,26 +59,23 @@ def _aggregate(results: list[dict], selection: str) -> dict:
     return {}
 
 
-def run_analysis(pdf_path: str, selection: str) -> dict:
+def run_analysis(analysis_mode: str) -> dict:
     """
     Full pipeline:
-      1. Split PDF into chunks via pdf_processor.
+      1. Split fixed PDF into chunks.
       2. For each chunk, retrieve top-3 ChromaDB references.
-      3. Build a prompt message per chunk and call AnythingLLM with retry.
+      3. Build a prompt message per chunk and call AnythingLLM.
       4. Aggregate all per-chunk results into a single response dict.
-
-    Args:
-        pdf_path:  Path to the PDF file to analyse.
-        selection: One of 'vulnerability_detection', 'legal_risk_scoring', 'pii_masking'.
-
-    Returns:
-        Aggregated dict matching the schema for the given selection.
     """
-    prompt_text = load_prompt(selection)
-    chunks = process_pdf_to_queries(pdf_path)[2:4]
+    prompt_text = load_prompt(analysis_mode)
+    
+    chunks = process_pdf_to_queries(FIXED_PDF_PATH)
+    
+    chunks_to_process = chunks[2:5] 
+    
     results = []
 
-    for chunk in chunks:
+    for chunk in chunks_to_process:
         references = chroma.get_top_3_matches(chunk)
         chroma_context = "\n\n".join(references)
 
@@ -83,7 +85,7 @@ def run_analysis(pdf_path: str, selection: str) -> dict:
             f"--- Document Chunk ---\n{chunk}"
         )
 
-        result = call_with_retry(call_llm, message, selection)
+        result = call_with_retry(call_llm, message, analysis_mode)
         results.append(result)
 
-    return _aggregate(results, selection)
+    return _aggregate(results, analysis_mode)
