@@ -6,7 +6,8 @@ class ChromaQueryService:
     def __init__(self, persist_directory="./cuad_chroma_db"):
         self.persist_directory = persist_directory
         # Must perfectly match the model used in build_cuad_kb.py
-        self.embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+        # self.embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+        self.embeddings = HuggingFaceEmbeddings(model_name="./offline_embedding_model")
         
         # Connect to your existing local database
         if os.path.exists(self.persist_directory):
