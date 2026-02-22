@@ -46,6 +46,7 @@ def call_with_retry(call_llm_fn, message: str, selection: str, max_attempts: int
 
     for attempt in range(1, max_attempts + 1):
         raw = call_llm_fn(message)
+        print(f"[response_validator] Attempt {attempt}/{max_attempts} raw output:\n{raw}\n")
         try:
             return validate(raw, selection)
         except ValueError as e:
