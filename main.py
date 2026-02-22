@@ -9,8 +9,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 # ─────────────────────────────────────────────────────────────
-#   from services.ingestion    import IngestionService
-#   from services.vector_store import VectorStore
+from backend.services.ingestion    import IngestionService
+from backend.services.vector_store import VectorStore
 #   from services.llm          import LLMService
 #   from services.prompts      import build_prompt
 #   from services.reporter     import generate_report
@@ -119,9 +119,9 @@ def mock_generate_report(findings, filename, score):
     """
 
 # ── Wire up mocks ─────────────────────────────────────────────
-ingestion    = MockIngestion()
-vector_store = MockVectorStore()
-llm          = MockLLM()
+ingestion    = IngestionService()
+vector_store = VectorStore()
+llm          = MockLLM() # Still mocked until Step 3!
 build_prompt = mock_build_prompt
 generate_report = mock_generate_report
 
