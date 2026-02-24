@@ -9,7 +9,7 @@ Powered by Llama 3.2 3B on the Snapdragon X Elite Hexagon NPU, every byte of you
 
 *(Note: High-res video is too large for GitHub's web player)*
 
-[![WATCH THE FULL VIDEO DEMO](https://img.youtube.com/vi/VIDEO_ID/0.jpg)](https://www.youtube.com/watch?v=VIDEO_ID)
+[![Watch the Demo](https://img.youtube.com/vi/o6RKIUL6Ju0/0.jpg)](https://www.youtube.com/watch?v=o6RKIUL6Ju0)
 
 ### Dashboard Previews
 
